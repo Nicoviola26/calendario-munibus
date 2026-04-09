@@ -32,6 +32,20 @@ npm run dev
 
 Servidor API: `http://localhost:3000`
 
+## 5.1) Crear/actualizar usuario administrador
+
+1. Definir en `.env`:
+   - `ADMIN_FULL_NAME`
+   - `ADMIN_EMAIL`
+   - `ADMIN_PASSWORD`
+2. Ejecutar:
+
+```bash
+npm run admin:seed
+```
+
+Esto crea (o actualiza) el admin con password hasheada.
+
 ## 6) Endpoints base disponibles
 
 - `GET /api/health` -> estado API + DB
@@ -39,6 +53,7 @@ Servidor API: `http://localhost:3000`
 - `POST /api/places` -> crear lugar
 - `GET /api/visits` -> lista de visitas
 - `POST /api/visits` -> crear visita
+- `POST /api/auth/admin/login` -> validar credenciales admin
 
 ## 7) Ejemplo rápido para crear visita
 
