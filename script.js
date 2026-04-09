@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.querySelector('.submit-btn');
 
     if (loginForm && submitBtn) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             // Show loading state
@@ -74,15 +74,34 @@ document.addEventListener('DOMContentLoaded', () => {
             document.head.appendChild(style);
         }
 
-            // Simulate API call and role-based redirect
-            setTimeout(() => {
-                const activeRole = document.querySelector('.role-btn.active').dataset.role;
+            const userInput = document.getElementById('email');
+            const activeRole = document.querySelector('.role-btn.active').dataset.role;
+
+            try {
                 if (activeRole === 'admin') {
+                    const response = await fetch('/api/auth/admin/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: userInput?.value?.trim(),
+                            password: passwordInput?.value
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Credenciales inválidas');
+                    }
                     window.location.href = 'admin-dashboard.html';
-                } else {
-                    window.location.href = 'dashboard.html';
+                    return;
                 }
-            }, 1500);
+
+                // Usuario general: acceso sin validación estricta por ahora.
+                window.location.href = 'dashboard.html';
+            } catch (_error) {
+                alert('Usuario o contraseña incorrectos.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalContent;
+            }
         });
     }
 
