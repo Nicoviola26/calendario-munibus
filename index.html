@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenidos | Calendario MuniBus</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <header class="card-header">
+                <img src="logo.png" alt="Logo Santa Fe" class="main-logo">
+            </header>
+
+            <main class="card-content">
+                <div class="welcome-section">
+                    <h2>Portal Institucional</h2>
+                    <p>Calendario unificado de visitas y eventos educativos.</p>
+                </div>
+
+                <div class="role-selector">
+                    <button class="role-btn active" id="btn-usuario" data-role="usuario">Usuario</button>
+                    <button class="role-btn" id="btn-admin" data-role="admin">Administrador</button>
+                </div>
+
+                <form class="login-form">
+                    <div class="input-group">
+                        <label for="email">CORREO INSTITUCIONAL</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="at-sign"></i>
+                            <input type="email" id="email" placeholder="ejemplo@institucion.edu" required>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <div class="label-row">
+                            <label for="password">CONTRASEÑA</label>
+                            <a href="#" class="forgot-link">¿Olvidó su contraseña?</a>
+                        </div>
+                        <div class="input-wrapper">
+                            <i data-lucide="lock"></i>
+                            <input type="password" id="password" placeholder="••••••••" required>
+                            <button type="button" class="toggle-password">
+                                <i data-lucide="eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="options-row">
+                        <label class="checkbox-container">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                            Mantener sesión iniciada
+                        </label>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        Entrar <i data-lucide="arrow-right"></i>
+                    </button>
+                </form>
+            </main>
+
+
+        </div>
+        
+        <button class="help-btn">
+            <i data-lucide="help-circle"></i>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>

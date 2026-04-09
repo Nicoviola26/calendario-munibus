@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Calendario MuniBus</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="dashboard-body">
+    <!-- Top Navigation -->
+    <header class="dashboard-header">
+        <button class="icon-btn">
+            <i data-lucide="menu"></i>
+        </button>
+        <span class="header-title">Bienvenidos</span>
+        <div class="user-profile">
+            <img src="https://i.pravatar.cc/150?u=antigravity" alt="Perfil">
+        </div>
+    </header>
+
+    <main class="dashboard-content">
+        <!-- Content Header -->
+        <header class="content-header">
+            <div class="section-label">MI AGENDA</div>
+            <div class="calendar-nav">
+                <button id="prev-month" class="nav-btn"><i data-lucide="chevron-left"></i></button>
+                <h1 class="month-title" id="current-month">Octubre 2023</h1>
+                <button id="next-month" class="nav-btn"><i data-lucide="chevron-right"></i></button>
+            </div>
+        </header>
+
+        <!-- Calendar Section -->
+        <section class="agenda-section">
+            <div class="calendar-card">
+                <div class="calendar-grid" id="calendar-grid">
+                    <div class="day-name">LU</div>
+                    <div class="day-name">MA</div>
+                    <div class="day-name">MI</div>
+                    <div class="day-name">JU</div>
+                    <div class="day-name">VI</div>
+                    <div class="day-name">SA</div>
+                    <div class="day-name">DO</div>
+                    
+                    <!-- Days -->
+                    <div class="day prev-month">25</div>
+                    <div class="day prev-month">26</div>
+                    <div class="day prev-month">27</div>
+                    <div class="day prev-month">28</div>
+                    <div class="day prev-month">29</div>
+                    <div class="day prev-month">30</div>
+                    <div class="day">1</div>
+                    
+                    <div class="day">2</div>
+                    <div class="day has-event blue">3</div>
+                    <div class="day">4</div>
+                    <div class="day has-event blue">5</div>
+                    <div class="day">6</div>
+                    <div class="day">7</div>
+                    <div class="day">8</div>
+                    
+                    <div class="day">9</div>
+                    <div class="day">10</div>
+                    <div class="day has-event red">11</div>
+                    <div class="day active">12</div>
+                    <div class="day">13</div>
+                    <div class="day">14</div>
+                    <div class="day">15</div>
+                    
+                    <div class="day">16</div>
+                    <div class="day has-event blue">17</div>
+                    <div class="day">18</div>
+                    <div class="day">19</div>
+                    <div class="day">20</div>
+                    <div class="day">21</div>
+                    <div class="day">22</div>
+                </div>
+            </div>
+            
+            <!-- Legend Moved Here -->
+            <section class="legend-section">
+                <div class="section-label">LEYENDA</div>
+                <ul class="legend-list">
+                    <li><span class="dot blue"></span> Reserva</li>
+                    <li><span class="dot red"></span> Conflicto</li>
+                    <li><span class="dot gray"></span> Disponible</li>
+                </ul>
+            </section>
+        </section>
+
+        <div class="dashboard-panel-right">
+            <!-- Next Visit Card -->
+            <div class="stats-card next-visit">
+                <div class="stats-label">SIGUIENTE VISITA</div>
+                <div class="stats-value">Museo Histórico</div>
+                <div class="visit-info">
+                    <span><i data-lucide="map-pin"></i> Calle 25 de Mayo</span>
+                    <span><i data-lucide="clock"></i> 14:30 hs</span>
+                </div>
+                <p class="stats-sub">En camino • Arribo estimado en 15 min</p>
+            </div>
+
+            <!-- Today's Assignment -->
+            <section class="assignment-section">
+                <div class="assignment-card">
+                    <div class="card-image-wrapper">
+                        <img src="dashboard_classroom_preview_1775647520050.png" alt="Aula">
+                        <span class="tag">CONFIRMADA</span>
+                    </div>
+                    <div class="card-details">
+                        <div class="assignment-header">
+                            <h2 style="font-size: 14px; margin-bottom: 4px;">Asignación de Hoy</h2>
+                            <span class="date" style="font-size: 11px;">Jueves, 12 Oct</span>
+                        </div>
+                        <div class="location">AULA 402 • FACULTAD</div>
+                        <h3 class="assignment-title">Taller Digital</h3>
+                        <div class="assignment-info">
+                            <span><i data-lucide="clock"></i> 09:00 - 11:30</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="primary-action">Gestionar</button>
+                            <button class="secondary-action">Detalles</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
