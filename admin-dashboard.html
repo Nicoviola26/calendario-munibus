@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="dashboard-body admin-view">
+<body class="dashboard-body admin-view ui-v2">
     <!-- Top Navigation -->
     <header class="dashboard-header">
         <button class="icon-btn">
@@ -18,6 +18,9 @@
         </button>
         <span class="header-title">Panel de Administración</span>
         <div class="user-profile">
+            <button id="btn-logout" class="icon-btn" title="Cerrar sesión">
+                <i data-lucide="log-out"></i>
+            </button>
             <div class="user-info-text" style="text-align: right; margin-right: 12px; font-size: 12px;">
                 <div id="header-user-name" style="font-weight: 700; color: var(--accent-blue);">Admin Central</div>
                 <div style="color: var(--text-secondary);">MuniBus Educativo</div>
@@ -47,14 +50,6 @@
                 </div>
             </div>
             
-            <section class="legend-section">
-                <div class="section-label">ESTADOS DE BUSES</div>
-                <ul class="legend-list">
-                    <li><span class="dot blue"></span> Ruta Activa</li>
-                    <li><span class="dot red"></span> Mantenimiento</li>
-                    <li><span class="dot gray"></span> Disponible</li>
-                </ul>
-            </section>
         </section>
 
         <div class="dashboard-panel-right">
@@ -81,13 +76,17 @@
                                 <i data-lucide="plus-circle" style="width: 20px; height: 20px;"></i>
                                 <span style="font-size: 11px;">Nueva Visita</span>
                             </button>
-                            <button id="btn-gestionar-lugares" class="secondary-btn" style="display: flex; flex-direction: column; gap: 8px; align-items: center; padding: 16px;">
-                                <i data-lucide="map-pins" style="width: 20px; height: 20px;"></i>
-                                <span style="font-size: 11px;">Gestionar Lugares</span>
+                            <button id="btn-gestionar-perfiles" class="secondary-btn" style="display: flex; flex-direction: column; gap: 8px; align-items: center; padding: 16px;">
+                                <i data-lucide="users-round" style="width: 20px; height: 20px;"></i>
+                                <span style="font-size: 11px;">Gestionar Perfiles</span>
                             </button>
                             <button id="btn-configuracion" class="secondary-btn" style="display: flex; flex-direction: column; gap: 8px; align-items: center; padding: 16px;">
                                 <i data-lucide="settings" style="width: 20px; height: 20px;"></i>
                                 <span style="font-size: 11px;">Configuración</span>
+                            </button>
+                            <button id="btn-gestionar-usuarios" class="secondary-btn" style="display: flex; flex-direction: column; gap: 8px; align-items: center; padding: 16px;">
+                                <i data-lucide="user-plus" style="width: 20px; height: 20px;"></i>
+                                <span style="font-size: 11px;">Gestionar Usuarios</span>
                             </button>
                             <button id="btn-documentos" class="secondary-btn" style="display: flex; flex-direction: column; gap: 8px; align-items: center; padding: 16px;">
                                 <i data-lucide="file-text" style="width: 20px; height: 20px;"></i>
@@ -145,35 +144,104 @@
         </div>
     </div>
 
-    <!-- Modal Gestionar Lugares -->
-    <div id="modal-lugares" class="modal-overlay">
+    <!-- Modal Gestionar Perfiles -->
+    <div id="modal-perfiles" class="modal-overlay">
         <div class="modal-content">
             <header class="modal-header">
-                <h2>Gestionar Lugares</h2>
+                <h2>Gestionar Perfiles</h2>
                 <button class="close-modal"><i data-lucide="x"></i></button>
             </header>
-            <div class="places-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 24px;">
-                <div class="place-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-color);">
-                    <span>Museo Histórico Provincial</span>
-                    <button style="background: none; border: none; color: #e11d48; cursor: pointer;"><i data-lucide="trash-2" style="width: 18px;"></i></button>
-                </div>
-                <div class="place-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-color);">
-                    <span>Palacio Municipal</span>
-                    <button style="background: none; border: none; color: #e11d48; cursor: pointer;"><i data-lucide="trash-2" style="width: 18px;"></i></button>
-                </div>
-                <div class="place-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-color);">
-                    <span>Puerto de Santa Fe</span>
-                    <button style="background: none; border: none; color: #e11d48; cursor: pointer;"><i data-lucide="trash-2" style="width: 18px;"></i></button>
-                </div>
+            <div id="profiles-list" style="max-height: 250px; overflow-y: auto; margin-bottom: 24px;">
             </div>
-            <div class="add-place-footer">
+            <div class="add-profile-footer">
                 <div class="input-group">
-                    <label>AGREGAR NUEVO LUGAR</label>
-                    <div style="display: flex; gap: 8px;">
-                        <input id="new-place-name" type="text" placeholder="Ej: Centro Cultural" style="flex: 1;">
-                        <button id="btn-add-place" class="submit-btn" style="padding: 10px 16px;"><i data-lucide="plus"></i></button>
+                    <label>AGREGAR PERFIL Y LUGAR ASIGNADO</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px;">
+                        <input id="new-profile-name" type="text" placeholder="Ej: María Gómez">
+                        <select id="new-profile-place" style="width: 100%; padding: 12px; border-radius: 12px; background: var(--input-bg); border: none; font-family: inherit;">
+                            <option value="">Seleccionar Lugar...</option>
+                        </select>
+                        <button id="btn-add-profile" class="submit-btn" style="padding: 10px 16px;"><i data-lucide="plus"></i></button>
                     </div>
                 </div>
+            </div>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 18px 0;">
+            <div class="input-group">
+                <label>GESTIONAR LUGARES</label>
+                <div id="places-admin-list" style="max-height: 180px; overflow-y: auto; margin-bottom: 10px;"></div>
+                    <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 8px;">
+                    <input id="new-place-name" type="text" placeholder="Ej: Centro Cultural" style="flex: 1;">
+                        <input id="new-place-color" type="color" value="#1171ba" title="Color del lugar" style="width: 44px; height: 40px; border: 1px solid var(--border-color); border-radius: 10px; padding: 4px; background: white;">
+                    <button id="btn-add-place" class="submit-btn" style="padding: 10px 16px;"><i data-lucide="plus"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Gestionar Usuarios -->
+    <div id="modal-usuarios" class="modal-overlay">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2>Gestionar Usuarios</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </header>
+            <div id="users-feedback" style="display:none; margin-bottom: 12px; padding: 10px 12px; border-radius: 10px; font-size: 12px;"></div>
+            <div id="users-admin-list" style="max-height: 240px; overflow-y: auto; margin-bottom: 16px;"></div>
+            <div class="input-group">
+                <label>CREAR USUARIO</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px;">
+                    <input id="new-user-username" type="text" placeholder="Usuario">
+                    <input id="new-user-password" type="password" placeholder="Contraseña">
+                    <select id="new-user-place" style="width: 100%; padding: 12px; border-radius: 12px; background: var(--input-bg); border: none; font-family: inherit;">
+                        <option value="">Seleccionar Lugar...</option>
+                    </select>
+                    <button id="btn-add-user" class="submit-btn" style="padding: 10px 16px;"><i data-lucide="plus"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editor Usuario -->
+    <div id="modal-user-editor" class="modal-overlay">
+        <div class="modal-content" style="max-width: 460px;">
+            <header class="modal-header">
+                <h2 id="user-editor-title">Editar Usuario</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </header>
+            <form id="form-user-editor" class="modal-form">
+                <div class="input-group">
+                    <label>USUARIO</label>
+                    <input id="edit-user-username" type="text" required>
+                </div>
+                <div class="input-group">
+                    <label>CONTRASEÑA (opcional)</label>
+                    <input id="edit-user-password" type="password" placeholder="Dejar vacío para no cambiar">
+                </div>
+                <div class="input-group">
+                    <label>LUGAR ASIGNADO</label>
+                    <select id="edit-user-place" required style="width: 100%; padding: 12px; border-radius: 12px; background: var(--input-bg); border: none; font-family: inherit;">
+                        <option value="">Seleccionar Lugar...</option>
+                    </select>
+                </div>
+                <div class="form-actions" style="margin-top: 16px; display: flex; gap: 10px;">
+                    <button type="button" class="secondary-btn close-modal" style="flex:1;">Cancelar</button>
+                    <button type="submit" class="submit-btn" style="flex:1;">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Eliminación Usuario -->
+    <div id="modal-user-delete" class="modal-overlay">
+        <div class="modal-content" style="max-width: 420px;">
+            <header class="modal-header">
+                <h2>Eliminar Usuario</h2>
+                <button class="close-modal"><i data-lucide="x"></i></button>
+            </header>
+            <p id="delete-user-text" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 14px;"></p>
+            <div class="form-actions" style="display:flex; gap: 10px;">
+                <button type="button" class="secondary-btn close-modal" style="flex:1;">Cancelar</button>
+                <button id="btn-confirm-delete-user" type="button" class="submit-btn" style="flex:1; background: linear-gradient(135deg,#be123c,#e11d48);">Eliminar</button>
             </div>
         </div>
     </div>

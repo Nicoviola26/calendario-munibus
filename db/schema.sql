@@ -28,6 +28,9 @@ CREATE TABLE IF NOT EXISTS visits (
 CREATE INDEX IF NOT EXISTS idx_visits_visit_date ON visits(visit_date);
 CREATE INDEX IF NOT EXISTS idx_visits_place_id ON visits(place_id);
 
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS place_id BIGINT REFERENCES places(id) ON DELETE SET NULL;
+
 INSERT INTO places (name)
 VALUES
   ('Museo Histórico Provincial'),

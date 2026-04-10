@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="dashboard-body">
+<body class="dashboard-body ui-v2">
     <!-- Top Navigation -->
     <header class="dashboard-header">
         <button class="icon-btn">
@@ -18,6 +18,9 @@
         </button>
         <span class="header-title">Bienvenidos</span>
         <div class="user-profile">
+            <button id="btn-logout" class="icon-btn" title="Cerrar sesión">
+                <i data-lucide="log-out"></i>
+            </button>
             <img src="https://i.pravatar.cc/150?u=antigravity" alt="Perfil">
         </div>
     </header>
@@ -80,15 +83,6 @@
                 </div>
             </div>
             
-            <!-- Legend Moved Here -->
-            <section class="legend-section">
-                <div class="section-label">LEYENDA</div>
-                <ul class="legend-list">
-                    <li><span class="dot blue"></span> Reserva</li>
-                    <li><span class="dot red"></span> Conflicto</li>
-                    <li><span class="dot gray"></span> Disponible</li>
-                </ul>
-            </section>
         </section>
 
         <div class="dashboard-panel-right">
@@ -112,8 +106,8 @@
                     </div>
                     <div class="card-details">
                         <div class="assignment-header">
-                            <h2 style="font-size: 14px; margin-bottom: 4px;">Asignación de Hoy</h2>
-                            <span class="date" style="font-size: 11px;">Jueves, 12 Oct</span>
+                            <h2 class="assignment-kicker">Asignación de Hoy</h2>
+                            <span class="date assignment-date">Jueves, 12 Oct</span>
                         </div>
                         <div class="location">AULA 402 • FACULTAD</div>
                         <h3 class="assignment-title">Taller Digital</h3>

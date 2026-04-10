@@ -1,13 +1,11 @@
-# Deploy online - Calendario MuniBus
+# Deploy online - Calendario MuniBus (Netlify + Neon)
 
 ## Recomendacion
 
-Para este proyecto, la opcion mas simple y estable es:
+Para este proyecto, una opcion simple es:
 
-- Backend + frontend juntos en **Render** (1 servicio web)
+- Frontend + API (Function) en **Netlify**
 - Base de datos PostgreSQL en **Neon** (gratis y facil)
-
-Esto evita mantener Docker en el servidor y deja todo con URL publica.
 
 ## 1) Subir proyecto a GitHub
 
@@ -20,40 +18,39 @@ Esto evita mantener Docker en el servidor y deja todo con URL publica.
 2. Crear una base Postgres.
 3. Copiar el `connection string` (empieza con `postgresql://...`).
 
-## 3) Crear servicio en Render
+## 3) Crear sitio en Netlify
 
-1. Ir a [https://render.com](https://render.com).
-2. New + > **Blueprint** (o Web Service conectado al repo).
-3. Seleccionar tu repo.
-4. Si usa blueprint, Render detecta `render.yaml` automaticamente.
-5. Configurar variable de entorno:
+1. Ir a [https://app.netlify.com](https://app.netlify.com).
+2. **Add new site** > **Import an existing project**.
+3. Conectar el repo y desplegar con estos valores:
+   - Build command: *(vacio)*
+   - Publish directory: `.`
+4. Netlify detecta `netlify.toml` y publica los archivos estaticos + Function de API.
+5. Configurar variables de entorno en Site settings > Environment variables:
    - `DATABASE_URL` = connection string de Neon
+   - `ADMIN_EMAIL` = correo del admin inicial
+   - `ADMIN_PASSWORD` = password del admin inicial
+   - `ADMIN_FULL_NAME` = nombre visible (opcional)
 
 ## 4) Inicializar esquema (tablas)
 
-En Render, abrir Shell del servicio y ejecutar:
+Ejecutar en tu maquina local (apuntando a Neon):
 
 ```bash
 npm run db:init
 ```
 
-Esto crea:
-
-- `users`
-- `places`
-- `visits`
-
-y carga lugares iniciales.
+Esto crea `users`, `places` y `visits` (y carga lugares iniciales).
 
 ## 5) Verificar online
 
-- `https://tu-app.onrender.com/api/health` debe devolver `{"ok":true,"db":"connected"}`
+- `https://tu-sitio.netlify.app/api/health` debe devolver `{"ok":true,"db":"connected"}`
 - Abrir:
-  - `https://tu-app.onrender.com/admin-dashboard.html`
-  - `https://tu-app.onrender.com/dashboard.html`
+  - `https://tu-sitio.netlify.app/admin-dashboard.html`
+  - `https://tu-sitio.netlify.app/dashboard.html`
 
 ## 6) Notas importantes
 
-- El plan free de Render "duerme" por inactividad (primer carga puede tardar).
-- Si queres mas velocidad/estabilidad, usar plan pago en Render.
-- Nunca subas `.env` al repo.
+- No subas `.env` al repo.
+- En Netlify, los endpoints de API se resuelven via redirect de `netlify.toml`.
+- Si cambias variables de entorno, redeploy para aplicar cambios.

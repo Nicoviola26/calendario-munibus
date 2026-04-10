@@ -11,12 +11,15 @@
     --card-bg: rgba(255, 255, 255, 0.85);
     --glass-bg: rgba(255, 255, 255, 0.7);
     --text-main: #0f172a;
+    --text-primary: #0f172a;
     --text-secondary: #475569;
     --text-muted: #94a3b8;
     
     /* UI Elements */
     --border-soft: rgba(255, 255, 255, 0.3);
     --border-stroke: rgba(0, 0, 0, 0.05);
+    --border-color: rgba(15, 23, 42, 0.12);
+    --input-bg: #f1f5f9;
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.02);
     --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
     --shadow-lg: 0 20px 40px -10px rgba(0, 31, 63, 0.1);
@@ -29,6 +32,8 @@
     --radius-sm: 12px;
     --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-speed: 0.25s ease;
+    --transition-smooth: all 0.25s ease;
 }
 
 body {
@@ -455,7 +460,7 @@ body {
 
 .dashboard-header {
     width: 100%;
-    padding: 14px 40px;
+    padding: 10px 26px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -471,7 +476,7 @@ body {
 .header-title {
     font-weight: 700;
     color: var(--primary-navy);
-    font-size: 20px;
+    font-size: 18px;
     letter-spacing: -0.5px;
 }
 
@@ -492,23 +497,24 @@ body {
 
 .dashboard-content {
     width: 100%;
-    max-width: 1300px;
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 24px 40px;
+    padding: 14px 20px;
     display: grid;
-    grid-template-columns: 1.4fr 1fr;
+    grid-template-columns: 1.35fr 0.95fr;
     grid-template-rows: auto 1fr;
-    gap: 32px;
-    height: calc(100vh - 70px);
+    gap: 14px;
+    height: calc(100vh - 62px);
     overflow: hidden;
 }
 
 .content-header {
     grid-column: 1 / -1;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 0;
 }
 
 .section-label {
@@ -524,14 +530,15 @@ body {
 .calendar-nav {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .nav-btn {
     background: white;
     border: 1px solid var(--border-stroke);
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 10px;
     display: flex;
     justify-content: center;
@@ -550,28 +557,30 @@ body {
 }
 
 .month-title {
-    font-size: 28px;
+    font-size: 22px;
     font-weight: 700;
     color: var(--text-main);
-    min-width: 200px;
-    text-align: center;
+    min-width: 0;
+    text-align: left;
+    line-height: 1.2;
+    margin: 0;
 }
 
 .agenda-section {
     grid-row: 2 / 3;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 10px;
     height: 100%;
 }
 
 .dashboard-panel-right {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 10px;
     height: 100%;
-    overflow-y: auto;
-    padding-right: 4px;
+    overflow: hidden;
+    padding-right: 0;
 }
 
 .dashboard-panel-right::-webkit-scrollbar {
@@ -586,7 +595,7 @@ body {
 .calendar-card {
     background: white;
     border-radius: var(--radius-lg);
-    padding: 40px;
+    padding: 18px;
     box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
@@ -602,7 +611,7 @@ body {
 .stats-card {
     background: linear-gradient(135deg, var(--primary-navy) 0%, var(--primary-blue) 100%);
     border-radius: var(--radius-lg);
-    padding: 28px;
+    padding: 18px;
     color: white;
     box-shadow: 0 15px 35px rgba(10, 25, 47, 0.15);
     position: relative;
@@ -630,16 +639,16 @@ body {
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 12px;
+    gap: 8px;
     text-align: center;
     flex: 1;
 }
 
 .day-name {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
     color: var(--text-muted);
-    margin-bottom: 20px;
+    margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 2.5px;
 }
@@ -649,7 +658,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     border-radius: 12px;
@@ -684,6 +693,8 @@ body {
     width: 5px;
     height: 5px;
     border-radius: 50%;
+    background: var(--event-color, var(--primary-blue));
+    box-shadow: 0 0 8px var(--event-color, var(--primary-blue));
 }
 
 .day.has-event.blue::after { background: var(--primary-blue); box-shadow: 0 0 8px var(--primary-blue); }
@@ -692,7 +703,7 @@ body {
 /* Legend Section */
 .legend-section {
     background: white;
-    padding: 20px 24px;
+    padding: 12px 14px;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-stroke);
 }
@@ -701,14 +712,15 @@ body {
     list-style: none;
     padding: 0;
     display: flex;
-    gap: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
 .legend-list li {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: var(--text-secondary);
 }
@@ -748,7 +760,8 @@ body {
     overflow: hidden;
     box-shadow: var(--shadow-md);
     display: flex;
-    height: 190px;
+    min-height: 160px;
+    height: auto;
     border: 1px solid var(--border-stroke);
     transition: var(--transition-base);
 }
@@ -784,7 +797,7 @@ body {
 }
 
 .card-details {
-    padding: 24px;
+    padding: 14px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -799,7 +812,7 @@ body {
 }
 
 .assignment-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-main);
     margin-bottom: 12px;
@@ -811,7 +824,7 @@ body {
     gap: 16px;
     font-size: 13px;
     color: var(--text-secondary);
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 }
 
 .assignment-info span {
@@ -823,7 +836,7 @@ body {
 
 .card-actions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     margin-top: auto;
 }
 
@@ -867,6 +880,366 @@ body {
     color: var(--primary-blue);
 }
 
+.admin-view .stats-card.next-visit {
+    padding: 14px;
+}
 
+.admin-view .assignment-card {
+    min-height: 0;
+}
 
+.admin-view .assignment-card .card-details {
+    padding: 14px !important;
+}
 
+.admin-view .admin-actions-grid {
+    margin-top: 10px !important;
+    gap: 8px !important;
+}
+
+.admin-view .admin-actions-grid .secondary-btn {
+    padding: 10px !important;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        height: calc(100vh - 62px);
+        overflow-y: auto;
+    }
+
+    .agenda-section,
+    .dashboard-panel-right {
+        height: auto;
+    }
+
+    .dashboard-panel-right {
+        overflow: visible;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-body {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+    }
+
+    .dashboard-header {
+        padding: 10px 14px;
+    }
+
+    .header-title {
+        font-size: 16px;
+    }
+
+    .dashboard-content {
+        padding: 12px;
+        gap: 12px;
+        height: auto;
+        overflow: visible;
+    }
+
+    .month-title {
+        font-size: 18px;
+    }
+
+    .calendar-card {
+        padding: 12px;
+    }
+
+    .calendar-grid {
+        gap: 6px;
+    }
+
+    .day {
+        font-size: 12px;
+        border-radius: 9px;
+    }
+
+    .assignment-card {
+        flex-direction: column;
+    }
+
+    .card-image-wrapper {
+        width: 100%;
+        height: 120px;
+    }
+
+    .card-details {
+        padding: 12px;
+    }
+
+    .card-actions {
+        flex-direction: column;
+    }
+
+    .modal-content {
+        max-width: calc(100% - 20px);
+        padding: 18px;
+    }
+
+    .admin-view .user-info-text {
+        display: none;
+    }
+
+    .admin-view .admin-actions-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* UI v2 - cleaner professional dashboard */
+.ui-v2.dashboard-body {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+}
+
+.ui-v2 .icon-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.ui-v2 .dashboard-header {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.ui-v2 .dashboard-content {
+    max-width: 1280px;
+    grid-template-columns: 1.5fr 0.9fr;
+    gap: 12px;
+    padding-top: 12px;
+}
+
+.ui-v2 .content-header {
+    gap: 6px;
+}
+
+.ui-v2 .calendar-nav {
+    width: 100%;
+    justify-content: flex-start !important;
+}
+
+.ui-v2 .month-title {
+    font-size: clamp(20px, 2vw, 28px) !important;
+    font-weight: 650;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.ui-v2 .calendar-card,
+.ui-v2 .legend-section,
+.ui-v2 .assignment-card,
+.ui-v2 .stats-card {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+}
+
+.ui-v2 .calendar-card {
+    padding: 14px;
+}
+
+.ui-v2 .calendar-grid {
+    gap: 6px;
+}
+
+.ui-v2 .day {
+    border: 1px solid transparent;
+    border-radius: 10px;
+}
+
+.ui-v2 .day:hover:not(.prev-month) {
+    border-color: rgba(17, 113, 186, 0.2);
+    background: #f8fafc;
+}
+
+.ui-v2 .day.active {
+    background: #0f172a;
+}
+
+.ui-v2 .legend-section {
+    padding: 10px 12px;
+}
+
+.ui-v2 .stats-card {
+    background: linear-gradient(155deg, #0f172a 0%, #1e3a5f 100%) !important;
+    padding: 14px !important;
+}
+
+.ui-v2 .stats-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    opacity: 0.8;
+}
+
+.ui-v2 .stats-value {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 6px 0;
+}
+
+.ui-v2 .visit-info {
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    opacity: 0.92;
+}
+
+.ui-v2 .stats-sub {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.ui-v2 .assignment-kicker {
+    margin: 0;
+    font-size: 13px;
+}
+
+.ui-v2 .assignment-date {
+    font-size: 11px;
+}
+
+.ui-v2 .assignment-title {
+    font-size: 17px;
+    margin-bottom: 8px;
+}
+
+.ui-v2 .assignment-info {
+    margin-bottom: 8px;
+}
+
+.ui-v2 .primary-action,
+.ui-v2 .secondary-action,
+.ui-v2 .secondary-btn {
+    min-height: 36px;
+    font-size: 12px;
+}
+
+.ui-v2.admin-view .admin-actions-grid {
+    gap: 8px !important;
+}
+
+.ui-v2.admin-view .admin-actions-grid .secondary-btn {
+    border-radius: 10px;
+    padding: 10px 8px !important;
+}
+
+@media (max-width: 1200px) {
+    .ui-v2 .dashboard-content {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+    }
+}
+
+@media (max-width: 768px) {
+    .ui-v2 .dashboard-header {
+        padding: 10px 12px;
+    }
+
+    .ui-v2 .dashboard-content {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .ui-v2 .month-title {
+        font-size: 18px !important;
+    }
+
+    .ui-v2 .calendar-grid {
+        gap: 4px;
+    }
+
+    .ui-v2 .day {
+        font-size: 11px;
+    }
+}
+
+/* Symmetric admin composition (desktop) */
+.ui-v2.admin-view .dashboard-content {
+    grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr);
+    align-items: stretch;
+    height: calc(100vh - 62px);
+    min-height: 0;
+    overflow: visible;
+}
+
+.ui-v2.admin-view .agenda-section {
+    display: grid;
+    grid-template-rows: 1fr;
+    gap: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.ui-v2.admin-view .calendar-card {
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+.ui-v2.admin-view .calendar-grid {
+    align-content: start;
+    grid-auto-rows: minmax(32px, 1fr);
+    overflow: hidden;
+}
+
+.ui-v2.admin-view .dashboard-panel-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.ui-v2.admin-view .dashboard-panel-right > * {
+    min-height: 0;
+}
+
+.ui-v2.admin-view .dashboard-panel-right .stats-card,
+.ui-v2.admin-view .dashboard-panel-right .assignment-section,
+.ui-v2.admin-view .dashboard-panel-right .assignment-card {
+    height: auto;
+    min-height: fit-content;
+}
+
+.ui-v2.admin-view .dashboard-panel-right .assignment-card {
+    display: flex;
+    align-items: stretch;
+}
+
+.ui-v2.admin-view .dashboard-panel-right .card-details {
+    width: 100%;
+    overflow: auto;
+}
+
+@media (max-width: 1200px) {
+    .ui-v2.admin-view .dashboard-content {
+        height: auto;
+        overflow: visible;
+    }
+
+    .ui-v2.admin-view .agenda-section {
+        display: flex;
+        overflow: visible;
+    }
+
+    .ui-v2.admin-view .dashboard-panel-right {
+        overflow: visible;
+    }
+
+    .ui-v2.admin-view .calendar-card {
+        height: auto;
+        overflow: visible;
+    }
+}
