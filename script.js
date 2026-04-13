@@ -369,11 +369,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const key = getDateKey(visitDate);
                 if (!normalized[key]) normalized[key] = [];
                 normalized[key].push({
+                    id: visit.id,
                     school: visit.school_name,
                     students: visit.students_count,
                     time: String(visit.visit_time).slice(0, 5),
                     place: visit.place_name,
-                    placeId: Number(visit.place_id)
+                    placeId: Number(visit.place_id),
+                    rawDate: visit.visit_date
                 });
             });
             return normalized;
@@ -1078,11 +1080,26 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span style="font-weight: 700; color: var(--accent-blue);">${visit.school}</span>
                             <span style="font-size: 11px; padding: 2px 8px; background: white; border-radius: 99px; font-weight: 600;">${visit.time} HS</span>
                         </div>
-                        <div style="display: flex; gap: 12px; font-size: 12px; color: var(--text-secondary);">
-                            <span style="display: flex; align-items: center; gap: 4px;"><i data-lucide="map-pin" style="width: 14px;"></i> ${visit.place}</span>
-                            <span style="display: flex; align-items: center; gap: 4px;"><i data-lucide="users" style="width: 14px;"></i> ${visit.students} alumnos</span>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div style="display: flex; gap: 12px; font-size: 12px; color: var(--text-secondary);">
+                                <span style="display: flex; align-items: center; gap: 4px;"><i data-lucide="map-pin" style="width: 14px;"></i> ${visit.place}</span>
+                                <span style="display: flex; align-items: center; gap: 4px;"><i data-lucide="users" style="width: 14px;"></i> ${visit.students}</span>
+                            </div>
+                            ${isAdminView ? `
+                            <div style="display: flex; gap: 8px;">
+                                <button class="icon-btn edit-visit-btn" data-id="${visit.id}" title="Editar" style="color: var(--accent-blue); padding: 4px;"><i data-lucide="edit-3" style="width: 16px;"></i></button>
+                                <button class="icon-btn delete-visit-btn" data-id="${visit.id}" title="Eliminar" style="color: #ef4444; padding: 4px;"><i data-lucide="trash-2" style="width: 16px;"></i></button>
+                            </div>
+                            ` : ''}
                         </div>
                     `;
+                    
+                    if (isAdminView) {
+                        const btnEdit = item.querySelector('.edit-visit-btn');
+                        const btnDelete = item.querySelector('.delete-visit-btn');
+                        btnEdit.onclick = () => openEditVisit(visit);
+                        btnDelete.onclick = () => handleDeleteVisit(visit.id);
+                    }
                     container.appendChild(item);
                 });
             } else {
@@ -1107,6 +1124,108 @@ document.addEventListener('DOMContentLoaded', () => {
         const editUserForm = document.getElementById('form-user-editor');
         const confirmDeleteUserBtn = document.getElementById('btn-confirm-delete-user');
         
+        const editVisitForm = document.getElementById('form-editar-visita');
+        const editVisitModal = document.getElementById('modal-editar-visita');
+
+        const openEditVisit = (visit) => {
+            const idInput = document.getElementById('edit-visit-id');
+            const schoolInput = document.getElementById('edit-visit-school');
+            const studentsInput = document.getElementById('edit-visit-students');
+            const dateInput = document.getElementById('edit-visit-date');
+            const timeInput = document.getElementById('edit-visit-time');
+            const placeSelect = document.getElementById('edit-visit-place');
+
+            idInput.value = visit.id;
+            schoolInput.value = visit.school;
+            studentsInput.value = visit.students;
+            
+            // Format date for input type="date"
+            const dateObj = new Date(visit.rawDate);
+            const yyyy = dateObj.getFullYear();
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+            
+            timeInput.value = visit.time;
+
+            // Fill places select
+            placeSelect.innerHTML = '<option value="">Seleccionar Lugar...</option>';
+            places.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                if (Number(p.id) === Number(visit.placeId)) opt.selected = true;
+                placeSelect.appendChild(opt);
+            });
+
+            editVisitModal.classList.add('active');
+        };
+
+        if (editVisitForm) {
+            editVisitForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('edit-visit-id').value;
+                const data = {
+                    school_name: document.getElementById('edit-visit-school').value,
+                    students_count: document.getElementById('edit-visit-students').value,
+                    visit_date: document.getElementById('edit-visit-date').value,
+                    visit_time: document.getElementById('edit-visit-time').value,
+                    place_id: document.getElementById('edit-visit-place').value
+                };
+
+                try {
+                    const res = await fetch(`/api/visits/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (res.ok) {
+                        editVisitModal.classList.remove('active');
+                        await loadRemoteData();
+                        renderCalendar(currentDate);
+                        showModal({ title: '¡Éxito!', message: 'Visita actualizada correctamente.' });
+                    } else {
+                        const err = await res.json();
+                        showModal({ title: 'Error', message: err.error, type: 'error' });
+                    }
+                } catch (error) {
+                    showModal({ title: 'Error', message: 'No se pudo conectar con el servidor.', type: 'error' });
+                }
+            };
+        }
+
+        const handleDeleteVisit = async (visitId) => {
+            const confirmed = await showModal({
+                title: 'Eliminar Visita',
+                message: '¿Estás seguro de que deseás eliminar esta visita? Esta acción no se puede deshacer.',
+                confirm: true,
+                type: 'confirm'
+            });
+
+            if (confirmed) {
+                try {
+                    const res = await fetch(`/api/visits/${visitId}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        await loadRemoteData();
+                        renderCalendar(currentDate);
+                        
+                        // Close day detail modal and re-render it if still active
+                        const dateTitle = document.getElementById('modal-date-title').textContent;
+                        // Use the previously set selectedDateForVisit or date components to refresh
+                        // For simplicity, we just close the detail modal
+                        document.getElementById('modal-dia-detalle').classList.remove('active');
+                        
+                        showModal({ title: 'Eliminada', message: 'La visita ha sido eliminada.' });
+                    } else {
+                        showModal({ title: 'Error', message: 'No se pudo eliminar la visita.', type: 'error' });
+                    }
+                } catch (error) {
+                    showModal({ title: 'Error', message: 'Error de conexión.', type: 'error' });
+                }
+            }
+        };
+
         let pendingPlaceImageData = null;
         let pendingEditPlaceImageData = null;
         const btnTriggerNewPlaceImg = document.getElementById('btn-trigger-new-place-img');

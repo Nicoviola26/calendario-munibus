@@ -411,6 +411,46 @@ app.post("/api/visits", async (req, res) => {
   }
 });
 
+app.put("/api/visits/:id", async (req, res) => {
+  const visitId = Number(req.params.id);
+  const { school_name, students_count, visit_date, visit_time, place_id, status } = req.body;
+
+  if (!visitId) return res.status(400).json({ error: "visit id is required" });
+
+  try {
+    const { rows } = await pool.query(
+      `UPDATE visits 
+       SET school_name = COALESCE($1, school_name),
+           students_count = COALESCE($2, students_count),
+           visit_date = COALESCE($3, visit_date),
+           visit_time = COALESCE($4, visit_time),
+           place_id = COALESCE($5, place_id),
+           status = COALESCE($6, status)
+       WHERE id = $7
+       RETURNING id, school_name, students_count, visit_date, visit_time, place_id, status`,
+      [school_name, students_count, visit_date, visit_time, place_id, status, visitId]
+    );
+
+    if (!rows.length) return res.status(404).json({ error: "Visit not found" });
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: "Error updating visit", details: error.message });
+  }
+});
+
+app.delete("/api/visits/:id", async (req, res) => {
+  const visitId = Number(req.params.id);
+  if (!visitId) return res.status(400).json({ error: "visit id is required" });
+
+  try {
+    const { rowCount } = await pool.query("DELETE FROM visits WHERE id = $1", [visitId]);
+    if (rowCount === 0) return res.status(404).json({ error: "Visit not found" });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: "Error deleting visit", details: error.message });
+  }
+});
+
 module.exports = {
   app,
   ensureAdminUser,

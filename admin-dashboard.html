@@ -451,7 +451,7 @@
                 <button class="close-modal close-modal-header"><i data-lucide="x"></i></button>
             </header>
             
-            <div id="day-visits-container">
+            <div id="day-visits-container" style="max-height: 400px; overflow-y: auto;">
                 <!-- Visitas se cargarán aquí dinámicamente -->
             </div>
             
@@ -463,6 +463,52 @@
             <div class="form-actions" style="margin-top: 24px;">
                 <button class="submit-btn id-btn-nueva-visita-from-day" style="width: 100%;">Agregar Visita para este día</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Visita -->
+    <div id="modal-editar-visita" class="modal-overlay">
+        <div class="modal-content">
+            <header class="modal-header">
+                <h2>Editar Visita</h2>
+                <button class="close-modal close-modal-header"><i data-lucide="x"></i></button>
+            </header>
+            <form class="modal-form" id="form-editar-visita">
+                <input type="hidden" id="edit-visit-id">
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label>INSTITUCIÓN / ESCUELA</label>
+                        <input id="edit-visit-school" type="text" required style="width: 100%; box-sizing: border-box;">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label>CANTIDAD DE ALUMNOS</label>
+                        <input id="edit-visit-students" type="number" min="1" required style="width: 100%; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label>FECHA</label>
+                        <input id="edit-visit-date" type="date" required style="width: 100%; box-sizing: border-box;">
+                    </div>
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label>HORARIO</label>
+                        <input id="edit-visit-time" type="time" required style="width: 100%; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>LUGAR</label>
+                    <select id="edit-visit-place" required style="width: 100%; padding: 12px; border-radius: 12px; background: var(--input-bg); border: none; font-family: inherit; box-sizing: border-box;">
+                        <option value="">Seleccionar Lugar...</option>
+                    </select>
+                </div>
+
+                <div class="form-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;">
+                    <button type="button" class="secondary-btn close-modal" style="width: 100%; height: 50px; padding: 0;">Cancelar</button>
+                    <button type="submit" class="submit-btn" style="width: 100%; height: 50px; padding: 0;">Guardar Cambios</button>
+                </div>
+            </form>
         </div>
     </div>
     <!-- Modal Reporte Mensual -->
