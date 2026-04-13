@@ -15,6 +15,37 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("."));
 
+const ensureTables = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS places (
+      id BIGSERIAL PRIMARY KEY,
+      name TEXT UNIQUE NOT NULL,
+      image_url TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS users (
+      id BIGSERIAL PRIMARY KEY,
+      full_name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      role TEXT NOT NULL CHECK (role IN ('admin', 'user')),
+      password_hash TEXT,
+      place_id BIGINT REFERENCES places(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS visits (
+      id BIGSERIAL PRIMARY KEY,
+      school_name TEXT NOT NULL,
+      students_count INT NOT NULL CHECK (students_count > 0),
+      visit_date DATE NOT NULL,
+      visit_time TIME NOT NULL,
+      place_id BIGINT NOT NULL REFERENCES places(id) ON DELETE RESTRICT,
+      created_by_user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      status TEXT NOT NULL DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'completed', 'cancelled')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+};
+
 const ensureUsersPlaceColumn = async () => {
   await pool.query(`
     ALTER TABLE users
@@ -30,6 +61,7 @@ const ensurePlacesColumns = async () => {
 };
 
 const ensureAdminUser = async () => {
+  await ensureTables();
   await ensureUsersPlaceColumn();
   await ensurePlacesColumns();
 
