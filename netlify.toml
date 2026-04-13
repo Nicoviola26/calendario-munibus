@@ -1,9 +1,8 @@
 [build]
-  command = "echo 'No build command needed'"
+  command = "echo 'Building...'"
   publish = "."
 
 [functions]
-  node_bundle = true
   external_node_modules = ["@neondatabase/serverless", "ws"]
 
 [[redirects]]
