@@ -1,17 +1,18 @@
 const serverless = require("serverless-http");
 const { app, ensureAdminUser } = require("../../app");
 
-let adminReadyPromise;
+let initialized = false;
 
-exports.handler = async (event, context) => {
-  if (!adminReadyPromise) {
-    adminReadyPromise = ensureAdminUser().catch((error) => {
-      adminReadyPromise = null;
-      throw error;
-    });
+module.exports.handler = async (event, context) => {
+  if (!initialized) {
+    try {
+      await ensureAdminUser();
+      initialized = true;
+    } catch (error) {
+      console.error("Initialization error:", error);
+    }
   }
-
-  await adminReadyPromise;
+  
   const handler = serverless(app);
   return handler(event, context);
 };

@@ -1,4 +1,7 @@
+console.log("Script MuniBus Iniciado");
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM Cargado");
+
     const STORAGE_KEYS = {
         places: "munibus_places",
         profiles: "munibus_profiles",
@@ -24,12 +27,151 @@ document.addEventListener('DOMContentLoaded', () => {
         return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toLowerCase() : fallback;
     };
     const defaultPlaceColor = (index) => PLACE_COLOR_PALETTE[index % PLACE_COLOR_PALETTE.length];
+    
+    // --- Custom Popup System Utility ---
+    const showModal = ({ title, message, type = 'success', confirm = false, input = false, inputValue = '', inputType = 'text' }) => {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'popup-overlay';
+            
+            const iconMap = {
+                success: 'check-circle',
+                error: 'alert-circle',
+                confirm: 'help-circle'
+            };
+            
+            overlay.innerHTML = `
+                <div class="popup-card">
+                    <div class="popup-icon ${type}">
+                        <i data-lucide="${iconMap[type] || 'info'}"></i>
+                    </div>
+                    <h3 class="popup-title">${title}</h3>
+                    <p class="popup-message" style="margin-bottom: ${input ? '16px' : '28px'}">${message}</p>
+                    ${input ? `
+                        <div style="margin-bottom: 24px;">
+                            <input type="${inputType}" id="popup-input" value="${inputValue}" 
+                                style="width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid var(--border-color); 
+                                font-family: inherit; font-size: 15px; box-sizing: border-box; outline: none; transition: border-color 0.2s;"
+                                onfocus="this.style.borderColor='var(--primary-blue)'"
+                                onblur="this.style.borderColor='var(--border-color)'">
+                        </div>
+                    ` : ''}
+                    <div class="popup-actions">
+                        ${(confirm || input) ? '<button class="popup-btn popup-btn-secondary" id="popup-cancel">Cancelar</button>' : ''}
+                        <button class="popup-btn popup-btn-primary" id="popup-ok">${(confirm || input) ? 'Confirmar' : 'Entendido'}</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            if (window.lucide) lucide.createIcons();
+            
+            const inputField = overlay.querySelector('#popup-input');
+            if (inputField) {
+                setTimeout(() => inputField.focus(), 100);
+                inputField.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') overlay.querySelector('#popup-ok').click();
+                });
+            }
+            
+            // Tiny delay for CSS transition
+            setTimeout(() => overlay.classList.add('active'), 10);
+            
+            const close = () => {
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    if (overlay.parentNode) document.body.removeChild(overlay);
+                }, 300);
+            };
+            
+            overlay.querySelector('#popup-ok').addEventListener('click', () => {
+                const result = input ? (inputField ? inputField.value : '') : true;
+                resolve(result);
+                close();
+            });
 
-    const logoutBtn = document.getElementById('btn-logout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.removeItem(STORAGE_KEYS.activeProfile);
-            window.location.href = 'index.html';
+            const cancelBtn = overlay.querySelector('#popup-cancel');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => {
+                    resolve(null);
+                    close();
+                });
+            }
+            
+            // Close on overlay click (if not confirm/input)
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay && !confirm && !input) {
+                    resolve(true);
+                    close();
+                }
+            });
+        });
+    };
+
+    // --- Logout & Session Logic ---
+    const handleLogout = () => {
+        localStorage.removeItem(STORAGE_KEYS.activeProfile);
+        window.location.href = 'index.html';
+    };
+
+    const logoutButtons = [
+        'btn-logout',
+        'btn-logout-dropdown',
+        'btn-logout-config'
+    ];
+
+    logoutButtons.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', handleLogout);
+    });
+
+    // Profile Dropdown Toggle
+    const profileToggle = document.getElementById('profile-toggle');
+    const profileDropdown = document.getElementById('profile-dropdown');
+
+    if (profileToggle && profileDropdown) {
+        profileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('active');
+            // Animate chevron
+            const chevron = profileToggle.querySelector('.chevron-icon');
+            if (chevron) {
+                chevron.style.transform = profileDropdown.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        });
+
+        document.addEventListener('click', () => {
+            profileDropdown.classList.remove('active');
+            const chevron = profileToggle.querySelector('.chevron-icon');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        });
+    }
+
+    // Populate User Info from Session
+    const activeProfile = readStorageJSON(STORAGE_KEYS.activeProfile, null);
+    if (activeProfile) {
+        const headerUserName = document.getElementById('header-user-name');
+        const headerUserRole = document.getElementById('header-user-role');
+        const dropdownUserName = document.getElementById('dropdown-user-name');
+        const dropdownUserRole = document.getElementById('dropdown-user-role');
+        const configUserName = document.getElementById('config-user-name');
+
+        const userName = activeProfile.name || activeProfile.username || "Usuario";
+        const userRole = activeProfile.placeName || (activeProfile.role === 'admin' ? 'Administrador' : 'Institución');
+
+        if (headerUserName) headerUserName.textContent = userName;
+        if (headerUserRole) headerUserRole.textContent = userRole;
+        if (dropdownUserName) dropdownUserName.textContent = userName;
+        if (dropdownUserRole) dropdownUserRole.textContent = userRole;
+        if (configUserName) configUserName.value = userName;
+    }
+
+    // Dropdown Config Shortcut
+    const btnConfigShortcut = document.getElementById('btn-config-shortcut');
+    const modalConfiguracionX = document.getElementById('modal-configuracion');
+    if (btnConfigShortcut && modalConfiguracionX) {
+        btnConfigShortcut.addEventListener('click', () => {
+            modalConfiguracionX.classList.add('active');
         });
     }
     // Password Toggle Logic
@@ -52,121 +194,155 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Form Submission Feedback
-    const loginForm = document.querySelector('.login-form');
-    const submitBtn = document.querySelector('.submit-btn');
+    // --- LOGIN HANDLER (Maximum Robustness) ---
+    const loginForm = document.getElementById('main-login-form');
+    const submitBtn = document.getElementById('btn-entrar');
 
-    if (loginForm && submitBtn) {
-        loginForm.addEventListener('submit', async (e) => {
+    const performLogin = async (e) => {
+        if (e) {
             e.preventDefault();
-            
-            // Show loading state
-            const originalContent = submitBtn.innerHTML;
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="loader"></span> Iniciando...';
-        
-        // Add minimal CSS for loader if not present
-        if (!document.getElementById('loader-style')) {
-            const style = document.createElement('style');
-            style.id = 'loader-style';
-            style.textContent = `
-                .loader {
-                    width: 16px;
-                    height: 16px;
-                    border: 2px solid white;
-                    border-bottom-color: transparent;
-                    border-radius: 50%;
-                    display: inline-block;
-                    animation: rotation 1s linear infinite;
-                }
-                @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            `;
-            document.head.appendChild(style);
+            e.stopPropagation();
         }
+        
+        console.log("Login attempt initiated...");
+        
+        if (!submitBtn) return;
+        const originalContent = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loader"></span> Iniciando...';
 
-            const userInput = document.getElementById('email');
-            const loginValue = userInput?.value?.trim();
-            const loginPassword = passwordInput?.value;
+        const emailInput = document.getElementById('email');
+        const passInput = document.getElementById('password');
+        const loginValue = emailInput?.value?.trim();
+        const loginPassword = passInput?.value;
 
-            try {
-                // Primero intentamos login de administrador en el mismo formulario.
-                const response = await fetch('/api/auth/admin/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: loginValue,
-                        password: loginPassword
-                    })
+        try {
+            // 0. Demo Fallback (For static preview)
+            if (loginValue === 'admin' && loginPassword === 'admin') {
+                writeStorageJSON(STORAGE_KEYS.activeProfile, {
+                    id: 99,
+                    name: "Administrador Demo",
+                    email: "admin@munibus.gob.ar",
+                    role: 'admin'
                 });
-                if (response.ok) {
-                    window.location.href = 'admin-dashboard.html';
-                    return;
-                }
-
-                // Si no es admin, intenta login de usuario creado por administrador.
-                const userLoginResponse = await fetch('/api/auth/user/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: loginValue,
-                        password: loginPassword
-                    })
-                });
-                if (userLoginResponse.ok) {
-                    const payload = await userLoginResponse.json();
-                    writeStorageJSON(STORAGE_KEYS.activeProfile, {
-                        id: payload.user.id,
-                        name: payload.user.full_name || payload.user.username,
-                        username: payload.user.username,
-                        placeId: Number(payload.user.place_id),
-                        placeName: payload.user.place_name,
-                    });
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
-
-                const localUsers = readStorageJSON(STORAGE_KEYS.users, []);
-                const localUser = localUsers.find(
-                    (user) =>
-                        String(user.username || "").toLowerCase() === String(loginValue || "").toLowerCase() &&
-                        String(user.password || "") === String(loginPassword || "")
-                );
-                if (localUser) {
-                    writeStorageJSON(STORAGE_KEYS.activeProfile, {
-                        id: localUser.id,
-                        name: localUser.full_name || localUser.username,
-                        username: localUser.username,
-                        placeId: Number(localUser.place_id),
-                    });
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
-
-                // Fallback local (modo sin backend)
-                const profileName = loginValue;
-                const storedProfiles = readStorageJSON(STORAGE_KEYS.profiles, []);
-                const matchedProfile = storedProfiles.find(
-                    (profile) => String(profile.name || "").toLowerCase() === String(profileName || "").toLowerCase()
-                );
-                if (matchedProfile) {
-                    writeStorageJSON(STORAGE_KEYS.activeProfile, matchedProfile);
-                    window.location.href = 'dashboard.html';
-                    return;
-                }
-                throw new Error("Credenciales inválidas");
-            } catch (_error) {
-                alert('Usuario/perfil inválido o sin permisos.');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalContent;
+                window.location.href = 'admin-dashboard.html';
+                return;
             }
-        });
+
+            // 1. Admin Login
+            const response = await fetch('/api/auth/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: loginValue, password: loginPassword })
+            });
+
+            if (response.ok) {
+                const payload = await response.json();
+                writeStorageJSON(STORAGE_KEYS.activeProfile, {
+                    id: payload.user.id || 0,
+                    name: payload.user.full_name || "Administrador",
+                    email: payload.user.email,
+                    role: 'admin'
+                });
+                window.location.href = 'admin-dashboard.html';
+                return;
+            }
+
+            // 2. User Login
+            const userRes = await fetch('/api/auth/user/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: loginValue, password: loginPassword })
+            });
+
+            if (userRes.ok) {
+                const payload = await userRes.json();
+                const userData = payload.user;
+                if (userData.place_id) userData.placeId = Number(userData.place_id);
+                writeStorageJSON(STORAGE_KEYS.activeProfile, {
+                    ...userData,
+                    name: userData.full_name || userData.username,
+                });
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            // 3. Local Fallback
+            const localUsers = readStorageJSON(STORAGE_KEYS.users, []);
+            const localUser = localUsers.find(u => 
+                String(u.username || "").toLowerCase() === String(loginValue || "").toLowerCase() && 
+                String(u.password || "") === String(loginPassword || "")
+            );
+            
+            if (localUser) {
+                if (localUser.place_id) localUser.placeId = Number(localUser.place_id);
+                writeStorageJSON(STORAGE_KEYS.activeProfile, {
+                    ...localUser,
+                    name: localUser.full_name || localUser.username,
+                });
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            throw new Error("Credenciales inválidas");
+        } catch (err) {
+            console.error("Login failure:", err);
+            await showModal({
+                title: 'Error de Acceso',
+                message: 'Usuario o contraseña incorrectos. Por favor, verificá tus datos.',
+                type: 'error'
+            });
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalContent;
+        }
+    };
+
+    if (loginForm) {
+        loginForm.onsubmit = performLogin;
+    }
+    if (submitBtn) {
+        submitBtn.onclick = performLogin;
     }
 
+    // --- Global State ---
+    let currentDate = new Date();
+    let allVisits = {
+        "2026-4-3": [{ school: "Colegio Inmaculada", students: 45, time: "09:00", place: "Palacio Municipal", placeId: 2 }],
+        "2026-4-5": [{ school: "Escuela Normal N° 32", students: 30, time: "10:30", place: "Museo Histórico", placeId: 1 }],
+        "2026-4-11": [{ school: "Instituto Sol", students: 22, time: "14:00", place: "Puerto de Santa Fe", placeId: 3 }],
+        "2026-4-17": [
+            { school: "Escuela Técnica N° 4", students: 35, time: "08:30", place: "Museo del Puerto", placeId: 3 },
+            { school: "Colegio San José", students: 28, time: "11:00", place: "Teatro Municipal", placeId: 5 }
+        ],
+        "2026-4-22": [{ school: "Escuela Manuel Belgrano", students: 40, time: "09:30", place: "Palacio Municipal", placeId: 2 }]
+    };
+    let selectedDateForVisit = "";
+    let places = [
+        { id: 1, name: "Museo Histórico Provincial", color: "#1171ba" },
+        { id: 2, name: "Palacio Municipal", color: "#6366f1" },
+        { id: 3, name: "Puerto de Santa Fe", color: "#0ea5e9" },
+        { id: 4, name: "Manzana de las Luces", color: "#14b8a6" },
+        { id: 5, name: "Teatro Municipal", color: "#f59e0b" },
+    ];
+    let managedUsers = [];
+    let profiles = [
+        { name: "Perfil Norte", placeId: 1 },
+        { name: "Perfil Centro", placeId: 2 }
+    ];
     // --- Dashboard / Admin Share Logic ---
-    const monthDisplay = document.querySelector('#current-month');
+    const monthDisplay = document.getElementById('current-month');
+    
+    // Update Today's Assignment Date
+    const assignmentDateEl = document.querySelector('.assignment-date');
+    if (assignmentDateEl) {
+        const today = new Date();
+        const options = { weekday: 'long', day: 'numeric', month: 'short' };
+        let dateStr = today.toLocaleDateString('es-ES', options);
+        dateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+        assignmentDateEl.textContent = dateStr;
+    }
+
     if (monthDisplay) {
-        let currentDate = new Date(); // Start at the current date
-        
         const prevBtn = document.getElementById('prev-month');
         const nextBtn = document.getElementById('next-month');
 
@@ -183,27 +359,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderCalendar(currentDate);
             });
         }
-
-        // --- Admin Data & Functions ---
-        let places = [
-            { id: 1, name: "Museo Histórico Provincial", color: "#1171ba" },
-            { id: 2, name: "Palacio Municipal", color: "#6366f1" },
-            { id: 3, name: "Puerto de Santa Fe", color: "#0ea5e9" },
-            { id: 4, name: "Manzana de las Luces", color: "#14b8a6" },
-            { id: 5, name: "Teatro Municipal", color: "#f59e0b" },
-        ];
-        let allVisits = {
-            "2026-4-3": [{ school: "Colegio Inmaculada", students: 45, time: "09:00", place: "Palacio Municipal", placeId: 2 }],
-            "2026-4-5": [{ school: "Escuela Normal N° 32", students: 30, time: "10:30", place: "Museo Histórico", placeId: 1 }],
-            "2026-4-11": [{ school: "Instituto Sol", students: 22, time: "14:00", place: "Puerto de Santa Fe", placeId: 3 }],
-            "2026-4-17": [
-                { school: "Escuela Técnica N° 4", students: 35, time: "08:30", place: "Museo del Puerto", placeId: 3 },
-                { school: "Colegio San José", students: 28, time: "11:00", place: "Teatro Municipal", placeId: 5 }
-            ],
-            "2026-4-22": [{ school: "Escuela Manuel Belgrano", students: 40, time: "09:30", place: "Palacio Municipal", placeId: 2 }]
-        };
-
-        let selectedDateForVisit = null;
 
         const getDateKey = (date) => `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 
@@ -236,19 +391,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const normalizePlacesWithStorage = (sourcePlaces) => {
             const storedPlaces = readStorageJSON(STORAGE_KEYS.places, []);
             return sourcePlaces.map((place, index) => {
-                const byId = storedPlaces.find((saved) => Number(saved.id) === Number(place.id));
-                const byName = storedPlaces.find(
-                    (saved) => String(saved.name || "").toLowerCase() === String(place.name || "").toLowerCase()
-                );
-                const saved = byId || byName || {};
+                const saved = storedPlaces.find((s) => Number(s.id) === Number(place.id)) || {};
                 return {
                     ...place,
-                    color: normalizeHexColor(saved.color, defaultPlaceColor(index)),
+                    color: normalizeHexColor(saved.color, place.color || defaultPlaceColor(index)),
                 };
             });
         };
 
         const loadRemoteData = async () => {
+
             try {
                 const [placesRes, visitsRes, usersRes] = await Promise.all([
                     fetch("/api/places"),
@@ -280,11 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
             savePlacesToStorage();
         };
 
-        let profiles = [
-            { name: "Perfil Norte", placeId: 1 },
-            { name: "Perfil Centro", placeId: 2 }
-        ];
-        let managedUsers = [];
         let editingUserIndex = null;
         let deletingUserIndex = null;
         const storedProfiles = readStorageJSON(STORAGE_KEYS.profiles, []);
@@ -368,10 +515,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (profilesContainer) {
                 profilesContainer.querySelectorAll('.btn-delete-profile').forEach((btn) => {
-                    btn.addEventListener('click', () => {
+                    btn.addEventListener('click', async () => {
                         const index = Number(btn.dataset.profileIndex);
                         if (!Number.isInteger(index) || !profiles[index]) return;
-                        const confirmDelete = confirm(`¿Eliminar el perfil "${profiles[index].name}"?`);
+                        
+                        const confirmDelete = await showModal({
+                            title: 'Eliminar Perfil',
+                            message: `¿Estás seguro que querés eliminar el perfil "${profiles[index].name}"?`,
+                            type: 'confirm',
+                            confirm: true
+                        });
+                        
                         if (!confirmDelete) return;
                         profiles.splice(index, 1);
                         saveProfilesToStorage();
@@ -381,31 +535,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 profilesContainer.querySelectorAll('.btn-edit-profile').forEach((btn) => {
-                    btn.addEventListener('click', () => {
+                    btn.addEventListener('click', async () => {
                         const index = Number(btn.dataset.profileIndex);
                         const current = profiles[index];
                         if (!Number.isInteger(index) || !current) return;
 
-                        const newName = prompt("Editar nombre del perfil:", current.name);
+                        const newName = await showModal({
+                            title: 'Editar Perfil',
+                            message: 'Ingresá el nuevo nombre para este perfil:',
+                            input: true,
+                            inputValue: current.name
+                        });
                         if (newName === null) return;
                         const normalizedName = newName.trim();
                         if (!normalizedName) {
-                            alert("El nombre del perfil no puede estar vacío.");
+                            await showModal({
+                                title: 'Campo requerido',
+                                message: 'El nombre del perfil no puede estar vacío.',
+                                type: 'error'
+                            });
                             return;
                         }
 
                         const placesOptions = places
                             .map((p) => `${p.id}: ${p.name}`)
-                            .join("\n");
-                        const newPlaceRaw = prompt(
-                            `Asignar lugar por ID:\n${placesOptions}`,
-                            String(current.placeId)
-                        );
+                            .join("<br>");
+                        const newPlaceRaw = await showModal({
+                            title: 'Asignar Lugar',
+                            message: `Ingresá el ID del nuevo lugar:<br><small>${placesOptions}</small>`,
+                            input: true,
+                            inputValue: String(current.placeId)
+                        });
                         if (newPlaceRaw === null) return;
                         const newPlaceId = Number(newPlaceRaw);
                         const placeExists = places.some((p) => Number(p.id) === newPlaceId);
                         if (!placeExists) {
-                            alert("ID de lugar inválido.");
+                            await showModal({
+                                title: 'Lugar no válido',
+                                message: 'El ID de lugar ingresado no es correcto.',
+                                type: 'error'
+                            });
                             return;
                         }
 
@@ -443,11 +612,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 row.style.alignItems = 'center';
                 row.style.padding = '10px 8px';
                 row.style.borderBottom = '1px solid var(--border-color)';
+                
+                const placeImgHtml = place.image_url 
+                    ? `<img src="${place.image_url}" style="width: 24px; height: 24px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border-color);">`
+                    : `<div style="width: 24px; height: 24px; border-radius: 6px; background: var(--input-bg); display: flex; align-items: center; justify-content: center;"><i data-lucide="image" style="width: 12px; color: var(--text-secondary);"></i></div>`;
+
                 row.innerHTML = `
-                    <span style="font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
-                        <span style="width: 10px; height: 10px; border-radius: 50%; background: ${normalizeHexColor(place.color, defaultPlaceColor(index))}; display: inline-block;"></span>
-                        ${place.name}
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        ${placeImgHtml}
+                        <span style="font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${normalizeHexColor(place.color, defaultPlaceColor(index))}; display: inline-block;"></span>
+                            ${place.name}
+                        </span>
+                    </div>
                     <div style="display: flex; gap: 8px;">
                         <button type="button" class="btn-edit-place" data-place-index="${index}" style="background: none; border: 1px solid var(--border-color); color: var(--text-secondary); cursor: pointer; border-radius: 8px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;">
                             <i data-lucide="pencil" style="width: 14px;"></i>
@@ -461,45 +638,35 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             placesAdminContainer.querySelectorAll('.btn-edit-place').forEach((btn) => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', () => {
                     const index = Number(btn.dataset.placeIndex);
                     const current = places[index];
                     if (!Number.isInteger(index) || !current) return;
 
-                    const newNameInput = prompt("Nuevo nombre del lugar:", current.name);
-                    if (newNameInput === null) return;
-                    const newName = newNameInput.trim();
-                    if (!newName) {
-                        alert("El nombre del lugar no puede estar vacío.");
-                        return;
-                    }
-                    if (places.some((p, i) => i !== index && p.name.toLowerCase() === newName.toLowerCase())) {
-                        alert("Ya existe un lugar con ese nombre.");
-                        return;
+                    const modal = document.getElementById('modal-editar-lugar');
+                    const form = document.getElementById('form-editar-lugar');
+                    const idInput = document.getElementById('edit-place-id');
+                    const nameInput = document.getElementById('edit-place-name');
+                    const colorInput = document.getElementById('edit-place-color');
+                    const preview = document.getElementById('edit-place-img-preview');
+                    
+                    if (!modal || !form) return;
+
+                    idInput.value = index;
+                    nameInput.value = current.name || '';
+                    colorInput.value = normalizeHexColor(current.color, "#1171ba");
+                    
+                    if (preview) {
+                        if (current.image_url) {
+                            preview.innerHTML = `<img src="${current.image_url}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        } else {
+                            preview.innerHTML = '<i data-lucide="image" style="width: 24px; color: var(--text-secondary);"></i>';
+                            lucide.createIcons();
+                        }
                     }
 
-                    try {
-                        const response = await fetch(`/api/places/${current.id}`, {
-                            method: "PUT",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ name: newName })
-                        });
-                        if (!response.ok) throw new Error("No se pudo actualizar");
-                        const updated = await response.json();
-                        places[index] = { ...updated, color: current.color };
-                    } catch (_error) {
-                        // fallback local when API isn't available
-                        places[index] = { ...current, name: newName };
-                    }
-
-                    const newColorInput = prompt("Color HEX del lugar (ej: #1171ba):", current.color || "#1171ba");
-                    if (newColorInput !== null) {
-                        places[index].color = normalizeHexColor(newColorInput, current.color || "#1171ba");
-                    }
-
-                    savePlacesToStorage();
-                    renderPlaces();
-                    lucide.createIcons();
+                    pendingEditPlaceImageData = current.image_url || null;
+                    modal.classList.add('active');
                 });
             });
 
@@ -511,18 +678,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const inUseByProfile = profiles.some((profile) => Number(profile.placeId) === Number(current.id));
                     if (inUseByProfile) {
-                        alert("No se puede borrar: hay perfiles asignados a este lugar.");
+                        await showModal({
+                            title: 'Acción Bloqueada',
+                            message: 'No se puede borrar este lugar porque hay perfiles asignados a él.',
+                            type: 'error'
+                        });
                         return;
                     }
 
-                    const confirmDelete = confirm(`¿Eliminar el lugar "${current.name}"?`);
+                    const confirmDelete = await showModal({
+                        title: 'Eliminar Lugar',
+                        message: `¿Estás seguro que querés eliminar "${current.name}"?`,
+                        type: 'confirm',
+                        confirm: true
+                    });
                     if (!confirmDelete) return;
 
                     try {
                         const response = await fetch(`/api/places/${current.id}`, { method: "DELETE" });
                         if (!response.ok) {
                             if (response.status === 409) {
-                                alert("No se puede borrar: el lugar tiene visitas asociadas.");
+                                await showModal({
+                                    title: 'Conflicto de Datos',
+                                    message: 'No se puede borrar: el lugar tiene visitas programadas asociadas.',
+                                    type: 'error'
+                                });
                                 return;
                             }
                             throw new Error("No se pudo eliminar");
@@ -752,6 +932,108 @@ document.addEventListener('DOMContentLoaded', () => {
                 grid.appendChild(dayEl);
             }
             lucide.createIcons();
+            updateMonthlyStats(date);
+        };
+
+        const updateMonthlyStats = (date) => {
+            const dateToUse = date || currentDate;
+            const year = dateToUse.getFullYear();
+            const month = dateToUse.getMonth() + 1;
+            const monthTotalEl = document.getElementById('stats-month-total');
+            const nextVisitEl = document.getElementById('stats-next-visit-desc');
+            
+            if (!monthTotalEl || !nextVisitEl) return;
+
+            let totalVisits = 0;
+            let currentMonthVisits = [];
+            
+            const activeProfile = readStorageJSON(STORAGE_KEYS.activeProfile, null);
+            const isAdminView = document.body.classList.contains('admin-view');
+
+            // Count visits for this month
+            for (const [key, visits] of Object.entries(allVisits)) {
+                const [vYear, vMonth, vDay] = key.split('-').map(Number);
+                if (vYear === year && vMonth === month) {
+                    let filteredVisits = visits;
+                    if (!isAdminView && activeProfile?.placeId) {
+                        filteredVisits = visits.filter(v => Number(v.placeId) === Number(activeProfile.placeId));
+                    }
+                    totalVisits += filteredVisits.length;
+                    filteredVisits.forEach(v => {
+                        currentMonthVisits.push({...v, date: key, fullDate: new Date(vYear, vMonth - 1, vDay)});
+                    });
+                }
+            }
+
+            monthTotalEl.textContent = `${totalVisits} Visitas`;
+
+            // Find next visit
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            const futureVisits = currentMonthVisits
+                .filter(v => v.fullDate >= today)
+                .sort((a, b) => a.fullDate - b.fullDate || a.time.localeCompare(b.time));
+
+            if (futureVisits.length > 0) {
+                const next = futureVisits[0];
+                const [ny, nm, nd] = next.date.split('-');
+                nextVisitEl.innerHTML = `<i data-lucide="calendar"></i> Próxima: ${nd}/${nm} - ${next.school}`;
+            } else {
+                nextVisitEl.innerHTML = `<i data-lucide="calendar"></i> No hay más este mes`;
+            }
+            lucide.createIcons();
+        };
+
+        const openMonthlyReport = () => {
+            const modal = document.getElementById('modal-reporte-mensual');
+            const body = document.getElementById('monthly-report-body');
+            const noData = document.getElementById('no-report-data');
+            const tableContainer = document.getElementById('monthly-report-table-container');
+            const title = document.getElementById('report-month-title');
+            
+            if (!modal || !body) return;
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            
+            title.textContent = `${monthNames[month - 1]} ${year}`;
+            body.innerHTML = '';
+            
+            let monthVisits = [];
+            for (const [key, visits] of Object.entries(allVisits)) {
+                const [vYear, vMonth, vDay] = key.split('-').map(Number);
+                if (vYear === year && vMonth === month) {
+                    visits.forEach(v => monthVisits.push({...v, day: vDay, dateObj: new Date(vYear, vMonth-1, vDay)}));
+                }
+            }
+
+            monthVisits.sort((a, b) => a.dateObj - b.dateObj || a.time.localeCompare(b.time));
+
+            if (monthVisits.length > 0) {
+                noData.style.display = 'none';
+                tableContainer.style.display = 'block';
+                monthVisits.forEach(v => {
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = '1px solid var(--border-color)';
+                    row.innerHTML = `
+                        <td style="padding: 12px 8px;">${v.day}/${month}</td>
+                        <td style="padding: 12px 8px; font-weight: 600;">${v.school}</td>
+                        <td style="padding: 12px 8px;">${v.place}</td>
+                        <td style="padding: 12px 8px; text-align: center;">${v.students}</td>
+                        <td style="padding: 12px 8px;">${v.time} HS</td>
+                    `;
+                    body.appendChild(row);
+                });
+            } else {
+                noData.style.display = 'block';
+                tableContainer.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+            lucide.createIcons();
         };
 
         const showDayDetails = (day, month, year) => {
@@ -769,6 +1051,12 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedDateForVisit = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             let dayVisits = allVisits[dateKey] || [];
             const isAdminView = document.body.classList.contains('admin-view');
+            const btnAddFromDay = modal.querySelector('.id-btn-nueva-visita-from-day');
+            
+            if (btnAddFromDay) {
+                btnAddFromDay.style.display = isAdminView ? 'block' : 'none';
+            }
+
             if (!isAdminView) {
                 const activeProfile = readStorageJSON(STORAGE_KEYS.activeProfile, null);
                 if (activeProfile?.placeId) {
@@ -818,14 +1106,107 @@ document.addEventListener('DOMContentLoaded', () => {
         const addUserBtn = document.getElementById('btn-add-user');
         const editUserForm = document.getElementById('form-user-editor');
         const confirmDeleteUserBtn = document.getElementById('btn-confirm-delete-user');
+        
+        let pendingPlaceImageData = null;
+        let pendingEditPlaceImageData = null;
+        const btnTriggerNewPlaceImg = document.getElementById('btn-trigger-new-place-img');
+        const newPlaceImgFile = document.getElementById('new-place-img-file');
+        const newPlaceImgPreview = document.getElementById('new-place-img-preview');
+
+        const btnTriggerEditPlaceImg = document.getElementById('btn-trigger-edit-place-img');
+        const editPlaceImgFile = document.getElementById('edit-place-img-file');
+        const editPlaceImgPreview = document.getElementById('edit-place-img-preview');
+        const formEditarLugar = document.getElementById('form-editar-lugar');
+
+        if (btnTriggerNewPlaceImg && newPlaceImgFile) {
+            btnTriggerNewPlaceImg.addEventListener('click', () => newPlaceImgFile.click());
+            newPlaceImgFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        pendingPlaceImageData = event.target.result;
+                        if (newPlaceImgPreview) {
+                            newPlaceImgPreview.innerHTML = `<img src="${pendingPlaceImageData}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (btnTriggerEditPlaceImg && editPlaceImgFile) {
+            btnTriggerEditPlaceImg.addEventListener('click', () => editPlaceImgFile.click());
+            editPlaceImgFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        pendingEditPlaceImageData = event.target.result;
+                        if (editPlaceImgPreview) {
+                            editPlaceImgPreview.innerHTML = `<img src="${pendingEditPlaceImageData}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        if (formEditarLugar) {
+            formEditarLugar.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const index = Number(document.getElementById('edit-place-id')?.value);
+                const current = places[index];
+                if (!current) return;
+
+                const newName = document.getElementById('edit-place-name')?.value?.trim();
+                const newColor = document.getElementById('edit-place-color')?.value;
+
+                if (!newName) return;
+
+                try {
+                    const response = await fetch(`/api/places/${current.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            name: newName, 
+                            image_url: pendingEditPlaceImageData 
+                        })
+                    });
+                    if (!response.ok) throw new Error("No se pudo actualizar");
+                    const updated = await response.json();
+                    places[index] = { ...updated, color: newColor };
+                } catch (_error) {
+                    places[index] = { 
+                        ...current, 
+                        name: newName, 
+                        color: newColor, 
+                        image_url: pendingEditPlaceImageData 
+                    };
+                }
+
+                savePlacesToStorage();
+                renderPlaces();
+                document.getElementById('modal-editar-lugar').classList.remove('active');
+                await showModal({
+                    title: 'Lugar Actualizado',
+                    message: 'Los cambios se guardaron correctamente.',
+                    type: 'success'
+                });
+            });
+        }
 
         if (addProfileBtn && addProfileInput && addProfilePlaceSelect) {
-            addProfileBtn.addEventListener('click', () => {
+            addProfileBtn.addEventListener('click', async () => {
                 const profileName = addProfileInput.value.trim();
                 const placeId = Number(addProfilePlaceSelect.value);
 
                 if (!profileName || !placeId) {
-                    alert("Completá nombre del perfil y lugar asignado.");
+                    await showModal({
+                        title: 'Datos Incompletos',
+                        message: 'Por favor, completá el nombre del perfil y seleccioná un lugar asignado.',
+                        type: 'error'
+                    });
                     return;
                 }
 
@@ -847,7 +1228,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newColor = normalizeHexColor(addPlaceColorInput?.value, defaultPlaceColor(places.length));
                 if (!newPlace) return;
                 if (places.some((p) => p.name.toLowerCase() === newPlace.toLowerCase())) {
-                    alert("Ese lugar ya existe.");
+                    await showModal({
+                        title: 'Lugar Existente',
+                        message: 'Ese lugar ya se encuentra registrado en el sistema.',
+                        type: 'error'
+                    });
                     return;
                 }
 
@@ -855,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const response = await fetch("/api/places", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ name: newPlace })
+                        body: JSON.stringify({ name: newPlace, image_url: pendingPlaceImageData })
                     });
                     if (!response.ok) throw new Error("No se pudo crear");
                     const createdPlace = await response.json();
@@ -863,11 +1248,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (_error) {
                     // fallback local when API isn't available
                     const nextId = places.length ? Math.max(...places.map((p) => Number(p.id) || 0)) + 1 : 1;
-                    places.push({ id: nextId, name: newPlace, color: newColor });
+                    places.push({ id: nextId, name: newPlace, color: newColor, image_url: pendingPlaceImageData });
                 }
 
                 savePlacesToStorage();
                 addPlaceInput.value = '';
+                pendingPlaceImageData = null;
+                if (newPlaceImgPreview) {
+                    newPlaceImgPreview.innerHTML = '<i data-lucide="image" style="width: 16px; color: var(--text-secondary);"></i>';
+                    lucide.createIcons();
+                }
                 if (addPlaceColorInput) addPlaceColorInput.value = defaultPlaceColor(places.length);
                 renderPlaces();
                 lucide.createIcons();
@@ -1003,40 +1393,157 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const updateDashboardCards = () => {
+            const activeProfile = readStorageJSON(STORAGE_KEYS.activeProfile, null);
+            const isAdminView = document.body.classList.contains('admin-view');
+            
+            // Get all flattened visits
+            let flatVisits = [];
+            for (const [dateKey, visits] of Object.entries(allVisits)) {
+                visits.forEach(v => {
+                    if (isAdminView || !activeProfile?.placeId || Number(v.placeId) === Number(activeProfile.placeId)) {
+                        flatVisits.push({ ...v, dateKey });
+                    }
+                });
+            }
+
+            // Sort by date and time
+            flatVisits.sort((a, b) => {
+                const dateCompare = a.dateKey.localeCompare(b.dateKey);
+                if (dateCompare !== 0) return dateCompare;
+                return (a.time || a.visit_time).localeCompare(b.time || b.visit_time);
+            });
+
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+            // Today's assignment
+            const todayVisits = flatVisits.filter(v => v.dateKey === todayStr);
+            const nextVisit = flatVisits.find(v => {
+                if (v.dateKey > todayStr) return true;
+                if (v.dateKey === todayStr) {
+                    const [h, m] = (v.time || v.visit_time).split(':').map(Number);
+                    const visitTime = new Date();
+                    visitTime.setHours(h, m, 0, 0);
+                    return visitTime > now;
+                }
+                return false;
+            });
+
+            // Update Next Visit UI
+            const nextName = document.getElementById('dashboard-next-visit-name');
+            const nextAddress = document.getElementById('dashboard-next-visit-address');
+            const nextTime = document.getElementById('dashboard-next-visit-time');
+            const nextCard = document.getElementById('dashboard-next-visit-card');
+            
+            if (nextName) {
+                if (nextVisit) {
+                    nextName.textContent = (nextVisit.school || nextVisit.school_name);
+                    if (nextTime) nextTime.textContent = `${nextVisit.time || nextVisit.visit_time} hs`;
+                    if (nextAddress) nextAddress.textContent = nextVisit.place || nextVisit.place_name || 'Lugar asignado';
+                    
+                    if (nextCard) {
+                        const p = getPlaceById(nextVisit.placeId);
+                        if (p?.image_url) {
+                            nextCard.style.backgroundImage = `linear-gradient(rgba(10,30,60,0.85), rgba(10,30,60,0.85)), url(${p.image_url})`;
+                            nextCard.style.backgroundSize = 'cover';
+                        } else {
+                            nextCard.style.backgroundImage = '';
+                        }
+                    }
+                } else {
+                    nextName.textContent = 'Sin próximas visitas';
+                    if (nextTime) nextTime.textContent = '--';
+                    if (nextAddress) nextAddress.textContent = '--';
+                    if (nextCard) nextCard.style.backgroundImage = '';
+                }
+            }
+
+            // Update Today Assignment UI
+            const todaySchool = document.getElementById('dashboard-today-school');
+            const todayPlace = document.getElementById('dashboard-today-place');
+            const todayTime = document.getElementById('dashboard-today-time');
+            const todayImg = document.getElementById('dashboard-today-img');
+
+            if (todaySchool) {
+                if (todayVisits.length > 0) {
+                    const first = todayVisits[0];
+                    todaySchool.textContent = (first.school || first.school_name);
+                    if (todayPlace) todayPlace.textContent = first.place || first.place_name || 'Lugar asignado';
+                    if (todayTime) todayTime.textContent = first.time || first.visit_time;
+                    
+                    if (todayImg) {
+                        const p = getPlaceById(first.placeId);
+                        todayImg.src = p?.image_url || 'classroom_preview.png';
+                    }
+                } else {
+                    todaySchool.textContent = 'Sin visitas para hoy';
+                    if (todayPlace) todayPlace.textContent = '--';
+                    if (todayTime) todayTime.textContent = '--';
+                    if (todayImg) todayImg.src = 'classroom_preview.png';
+                }
+            }
+        };
+
         // Initial render
         (async () => {
+            renderCalendar(currentDate);
+            updateMonthlyStats(currentDate);
+            updateDashboardCards();
+            renderPlaces();
             await loadRemoteData();
             renderCalendar(currentDate);
+            updateMonthlyStats(currentDate);
+            updateDashboardCards();
             renderPlaces();
         })();
 
+        const btnVerReporteMensual = document.getElementById('btn-ver-reporte-mensual');
+        const modalReporteMensual = document.getElementById('modal-reporte-mensual');
+        const btnExportPdf = document.getElementById('btn-export-pdf');
+
+        if (btnVerReporteMensual) {
+            btnVerReporteMensual.addEventListener('click', openMonthlyReport);
+        }
+
+        if (btnExportPdf) {
+            btnExportPdf.addEventListener('click', () => {
+                const printContent = document.getElementById('modal-reporte-mensual').querySelector('.modal-content').innerHTML;
+                
+                // Create a temporary print view
+                const printWindow = window.open('', '', 'height=600,width=800');
+                printWindow.document.write('<html><head><title>Reporte Mensual MuniBus</title>');
+                printWindow.document.write('<style>body{font-family:sans-serif;padding:40px;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ddd;padding:12px;text-align:left;} th{background:#f4f4f4;} .close-modal, #btn-export-pdf {display:none;}</style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContent);
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 500);
+            });
+        }
+
         // --- Admin Modal Logic ---
-        const btnResumenDia = document.getElementById('btn-resumen-dia');
         const btnNuevaVisita = document.getElementById('btn-nueva-visita');
         const btnGestionarPerfiles = document.getElementById('btn-gestionar-perfiles');
+        const btnGestionarLugares = document.getElementById('btn-gestionar-lugares');
         const btnGestionarUsuarios = document.getElementById('btn-gestionar-usuarios');
         const btnConfiguracion = document.getElementById('btn-configuracion');
         const btnDocumentos = document.getElementById('btn-documentos');
         
         const modalAgregar = document.getElementById('modal-agregar');
         const modalPerfiles = document.getElementById('modal-perfiles');
+        const modalLugares = document.getElementById('modal-lugares');
         const modalUsuarios = document.getElementById('modal-usuarios');
         const modalUserEditor = document.getElementById('modal-user-editor');
         const modalUserDelete = document.getElementById('modal-user-delete');
         const modalConfiguracion = document.getElementById('modal-configuracion');
         const modalDocumentos = document.getElementById('modal-documentos');
         const modalDiaDetalle = document.getElementById('modal-dia-detalle');
-        
-        const closeButtons = document.querySelectorAll('.close-modal');
         const formVisita = document.getElementById('form-visita');
-
-        // Resumen del Día - Link to Today
-        if (btnResumenDia) {
-            btnResumenDia.addEventListener('click', () => {
-                const today = new Date();
-                showDayDetails(today.getDate(), today.getMonth(), today.getFullYear());
-            });
-        }
 
         // Toggle Nueva Visita
         if (btnNuevaVisita && modalAgregar) {
@@ -1060,6 +1567,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnGestionarPerfiles && modalPerfiles) {
             btnGestionarPerfiles.addEventListener('click', () => modalPerfiles.classList.add('active'));
         }
+        
+        // Toggle Gestionar Lugares
+        if (btnGestionarLugares && modalLugares) {
+            btnGestionarLugares.addEventListener('click', () => modalLugares.classList.add('active'));
+        }
 
         if (btnGestionarUsuarios && modalUsuarios) {
             btnGestionarUsuarios.addEventListener('click', () => {
@@ -1079,30 +1591,19 @@ document.addEventListener('DOMContentLoaded', () => {
             btnDocumentos.addEventListener('click', () => modalDocumentos.classList.add('active'));
         }
 
-        // Shared close logic for all modals
-        closeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                modalAgregar?.classList.remove('active');
-                modalPerfiles?.classList.remove('active');
-                modalUsuarios?.classList.remove('active');
-                modalUserEditor?.classList.remove('active');
-                modalUserDelete?.classList.remove('active');
-                modalConfiguracion?.classList.remove('active');
-                modalDocumentos?.classList.remove('active');
-                modalDiaDetalle?.classList.remove('active');
-            });
+        // Shared global close logic (Capturing any click on .close-modal)
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.close-modal')) {
+                const modal = e.target.closest('.modal-overlay');
+                if (modal) modal.classList.remove('active');
+            }
         });
 
         // Close on overlay click
         window.addEventListener('click', (e) => {
-            if (e.target === modalAgregar) modalAgregar.classList.remove('active');
-            if (e.target === modalPerfiles) modalPerfiles.classList.remove('active');
-            if (e.target === modalUsuarios) modalUsuarios.classList.remove('active');
-            if (e.target === modalUserEditor) modalUserEditor.classList.remove('active');
-            if (e.target === modalUserDelete) modalUserDelete.classList.remove('active');
-            if (e.target === modalConfiguracion) modalConfiguracion.classList.remove('active');
-            if (e.target === modalDocumentos) modalDocumentos.classList.remove('active');
-            if (e.target === modalDiaDetalle) modalDiaDetalle.classList.remove('active');
+            if (e.target.classList.contains('modal-overlay')) {
+                e.target.classList.remove('active');
+            }
         });
 
         // Upload Document Logic
@@ -1112,11 +1613,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (uploadArea && fileInput) {
             uploadArea.addEventListener('click', () => fileInput.click());
             
-            fileInput.addEventListener('change', (e) => {
+            fileInput.addEventListener('change', async (e) => {
                 if (e.target.files.length > 0) {
                     const visibility = document.getElementById('doc-visibility-select').value.toUpperCase();
-                    alert('¡Documento "' + e.target.files[0].name + '" subido con éxito!\nVisibilidad configurada para: ' + visibility);
-                    // In a real app, we would append to the list here
+                    await showModal({
+                        title: 'Documento Subido',
+                        message: `¡El archivo "${e.target.files[0].name}" se subió con éxito!\nVisibilidad: ${visibility}`,
+                        type: 'success'
+                    });
                 }
             });
         }
@@ -1149,14 +1653,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (btnSaveConfig) {
-            btnSaveConfig.addEventListener('click', () => {
+            btnSaveConfig.addEventListener('click', async () => {
                 if (headerUserName && configUserName) {
                     headerUserName.textContent = configUserName.value;
                 }
                 if (headerUserImg && pendingImageData) {
                     headerUserImg.src = pendingImageData;
                 }
-                alert('¡Configuración guardada correctamente!');
+                await showModal({
+                    title: 'Perfil Actualizado',
+                    message: 'La configuración de tu perfil se ha guardado correctamente.',
+                    type: 'success'
+                });
                 modalConfiguracion.classList.remove('active');
             });
         }
@@ -1169,6 +1677,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const timeInput = document.getElementById('visit-time');
                 const placeInput = document.getElementById('visit-place');
                 const studentsInput = document.getElementById('visit-students');
+                const studentsCount = Number(studentsInput?.value);
+
+                if (studentsCount <= 0) {
+                    await showModal({
+                        title: 'Dato Inválido',
+                        message: 'La cantidad de alumnos debe ser mayor a 0.',
+                        type: 'error'
+                    });
+                    return;
+                }
 
                 const payload = {
                     school_name: schoolInput?.value?.trim(),
@@ -1204,11 +1722,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     renderCalendar(currentDate);
-                    alert('¡Visita programada con éxito!');
+                    await showModal({
+                        title: 'Visita Programada',
+                        message: '¡La visita se ha registrado y agendado con éxito!',
+                        type: 'success'
+                    });
                     modalAgregar.classList.remove('active');
                     formVisita.reset();
                 } catch (error) {
-                    alert('No se pudo guardar la visita en la base de datos.');
+                    await showModal({
+                        title: 'Error de Guardado',
+                        message: 'No se pudo guardar la visita en la base de datos. Por favor, intentá nuevamente.',
+                        type: 'error'
+                    });
                 }
             });
         }

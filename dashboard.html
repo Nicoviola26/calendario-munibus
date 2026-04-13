@@ -17,11 +17,26 @@
             <i data-lucide="menu"></i>
         </button>
         <span class="header-title">Bienvenidos</span>
-        <div class="user-profile">
-            <button id="btn-logout" class="icon-btn" title="Cerrar sesión">
-                <i data-lucide="log-out"></i>
+        <div class="user-profile-container">
+            <button class="user-profile-toggle" id="profile-toggle">
+                <div class="user-info-text" style="text-align: right; margin-right: 12px; font-size: 12px;">
+                    <div id="header-user-name" style="font-weight: 700; color: var(--primary-blue);">Usuario</div>
+                    <div id="header-user-role" style="color: var(--text-secondary);">Municipalidad</div>
+                </div>
+                <img src="https://i.pravatar.cc/150?u=antigravity" alt="Perfil" id="header-user-img">
+                <i data-lucide="chevron-down" class="chevron-icon"></i>
             </button>
-            <img src="https://i.pravatar.cc/150?u=antigravity" alt="Perfil">
+            <div class="profile-dropdown" id="profile-dropdown">
+                <div class="dropdown-header">
+                    <span id="dropdown-user-name" style="font-weight: 700; display: block;">Usuario</span>
+                    <span id="dropdown-user-role" style="font-size: 11px; color: var(--text-secondary);">Municipalidad</span>
+                </div>
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                <button class="dropdown-item" id="btn-logout-dropdown">
+                    <i data-lucide="log-out"></i>
+                    <span>Cerrar sesión</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -87,12 +102,12 @@
 
         <div class="dashboard-panel-right">
             <!-- Next Visit Card -->
-            <div class="stats-card next-visit">
+            <div class="stats-card next-visit" id="dashboard-next-visit-card">
                 <div class="stats-label">SIGUIENTE VISITA</div>
-                <div class="stats-value">Museo Histórico</div>
-                <div class="visit-info">
-                    <span><i data-lucide="map-pin"></i> Calle 25 de Mayo</span>
-                    <span><i data-lucide="clock"></i> 14:30 hs</span>
+                <div class="stats-value" id="dashboard-next-visit-name">Sin visitas</div>
+                <div class="visit-info" id="dashboard-next-visit-info">
+                    <span><i data-lucide="map-pin"></i> <span id="dashboard-next-visit-address">--</span></span>
+                    <span><i data-lucide="clock"></i> <span id="dashboard-next-visit-time">--</span></span>
                 </div>
                 <p class="stats-sub">En camino • Arribo estimado en 15 min</p>
             </div>
@@ -101,7 +116,7 @@
             <section class="assignment-section">
                 <div class="assignment-card">
                     <div class="card-image-wrapper">
-                        <img src="dashboard_classroom_preview_1775647520050.png" alt="Aula">
+                        <img id="dashboard-today-img" src="classroom_preview.png" alt="Aula">
                         <span class="tag">CONFIRMADA</span>
                     </div>
                     <div class="card-details">
@@ -109,10 +124,10 @@
                             <h2 class="assignment-kicker">Asignación de Hoy</h2>
                             <span class="date assignment-date">Jueves, 12 Oct</span>
                         </div>
-                        <div class="location">AULA 402 • FACULTAD</div>
-                        <h3 class="assignment-title">Taller Digital</h3>
+                        <div class="location" id="dashboard-today-place">--</div>
+                        <h3 class="assignment-title" id="dashboard-today-school">No hay asignación</h3>
                         <div class="assignment-info">
-                            <span><i data-lucide="clock"></i> 09:00 - 11:30</span>
+                            <span><i data-lucide="clock"></i> <span id="dashboard-today-time">--</span></span>
                         </div>
                         <div class="card-actions">
                             <button class="primary-action">Gestionar</button>
@@ -124,6 +139,33 @@
         </div>
     </main>
 
+    <!-- Modal Detalle del Día -->
+    <div id="modal-dia-detalle" class="modal-overlay">
+        <div class="modal-content">
+            <header class="modal-header">
+                <div>
+                    <h2 id="modal-date-title">Detalle del Día</h2>
+                    <div id="modal-date-subtitle" style="font-size: 13px; color: var(--text-secondary);">Visitas programadas</div>
+                </div>
+                <button class="close-modal close-modal-header"><i data-lucide="x"></i></button>
+            </header>
+            
+            <div id="day-visits-container">
+                <!-- Visitas se cargarán aquí dinámicamente -->
+            </div>
+            
+            <div id="no-visits-msg" style="display: none; text-align: center; padding: 40px 20px;">
+                <i data-lucide="calendar-off" style="width: 48px; height: 48px; color: var(--border-color); margin-bottom: 16px;"></i>
+                <div style="color: var(--text-secondary); font-weight: 500;">No hay ninguna visita agregada para este día.</div>
+            </div>
+
+            <div class="form-actions" style="margin-top: 24px;">
+                <button class="submit-btn id-btn-nueva-visita-from-day" style="width: 100%;">Agregar Visita para este día</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
     <script>
         lucide.createIcons();
     </script>

@@ -22,8 +22,16 @@ const ensureUsersPlaceColumn = async () => {
   `);
 };
 
+const ensurePlacesColumns = async () => {
+  await pool.query(`
+    ALTER TABLE places
+    ADD COLUMN IF NOT EXISTS image_url TEXT;
+  `);
+};
+
 const ensureAdminUser = async () => {
   await ensureUsersPlaceColumn();
+  await ensurePlacesColumns();
 
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
     return;
@@ -158,7 +166,7 @@ app.get("/api/health", async (_req, res) => {
 app.get("/api/places", async (_req, res) => {
   try {
     const { rows } = await pool.query(
-      "SELECT id, name, created_at FROM places ORDER BY name ASC"
+      "SELECT id, name, image_url, created_at FROM places ORDER BY name ASC"
     );
     res.json(rows);
   } catch (error) {
@@ -167,15 +175,15 @@ app.get("/api/places", async (_req, res) => {
 });
 
 app.post("/api/places", async (req, res) => {
-  const { name } = req.body;
+  const { name, image_url } = req.body;
   if (!name) {
     return res.status(400).json({ error: "name is required" });
   }
 
   try {
     const { rows } = await pool.query(
-      "INSERT INTO places (name) VALUES ($1) RETURNING id, name, created_at",
-      [name]
+      "INSERT INTO places (name, image_url) VALUES ($1, $2) RETURNING id, name, image_url, created_at",
+      [name, image_url]
     );
     return res.status(201).json(rows[0]);
   } catch (error) {
@@ -185,7 +193,7 @@ app.post("/api/places", async (req, res) => {
 
 app.put("/api/places/:id", async (req, res) => {
   const placeId = Number(req.params.id);
-  const { name } = req.body;
+  const { name, image_url } = req.body;
 
   if (!placeId || !name) {
     return res.status(400).json({ error: "id and name are required" });
@@ -193,8 +201,8 @@ app.put("/api/places/:id", async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      "UPDATE places SET name = $1 WHERE id = $2 RETURNING id, name, created_at",
-      [name, placeId]
+      "UPDATE places SET name = $1, image_url = $2 WHERE id = $3 RETURNING id, name, image_url, created_at",
+      [name, image_url, placeId]
     );
     if (!rows.length) {
       return res.status(404).json({ error: "Place not found" });

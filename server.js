@@ -8,7 +8,7 @@ ensureAdminUser()
     });
   })
   .catch((error) => {
-    console.warn("Admin/DB init warning:", error.message);
+    console.error("Admin/DB init error:", error);
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT} (degraded mode)`);
     });

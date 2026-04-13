@@ -1,9 +1,12 @@
 [build]
+  command = "echo 'No build command needed'"
   publish = "."
-  functions = "netlify/functions"
+
+[functions]
+  node_bundle = true
+  external_node_modules = ["@neondatabase/serverless", "ws"]
 
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/api/api/:splat"
+  to = "/.netlify/functions/api/:splat"
   status = 200
-
